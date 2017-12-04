@@ -14,7 +14,8 @@ CLIENT_ID = 'recent-change-events-source'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 
 # Shouldn't really be a constant but this is just a demo...
-AVRO = AvroTurf::Messaging.new registry_url: REGISTRY_URL, schemas_path: SCHEMATA_PATH
+AVRO = AvroTurf::Messaging.new registry_url: REGISTRY_URL,
+                               schemas_path: SCHEMATA_PATH
 
 def config_from_env
   { source_url: SOURCE_URL,
@@ -52,7 +53,7 @@ def retrieve_events(source_url)
   req.run
 end
 
-def to_avro(event, registry_url)
+def to_avro(event)
   smaller_event = { 'id' => event.fetch(:id) }
   AVRO.encode smaller_event, schema_name: 'article_change_event'
 end
@@ -78,11 +79,11 @@ def init_producer(config)
 end
 
 def start(config)
-  source_url, registry_url, topic = config.fetch_values :source_url, :registry_url, :topic
+  source_url, topic = config.fetch_values :source_url, :topic
   retrieve_events(source_url) do |raw_event|
     event = JSON.parse raw_event, symbolize_names: true
-    return unless eligible? event
-    produce_event event, topic, registry_url
+    # return unless eligible? event
+    produce_event event, topic
   end
 end
 
