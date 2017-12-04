@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
-require 'logger'
-require 'kafka' # TODO: maybe use Racecar?
+require 'kafka' # TODO: maybe use Racecar
 
 TOPIC = 'recent-change-events'
 GROUP_ID = 'recent-change-events-sink'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
-CONSUME_FROM_BEGINNING = true
+CONSUME_FROM_BEGINNING = false
 
 def config
   { topic: TOPIC,
