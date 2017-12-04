@@ -22,9 +22,19 @@ def retrieve_events(url)
   req.on_headers { |response| raise 'Request failed' if response.code != 200 }
 
   req.on_body do |chunk|
-    chunk.each_line do |line|
-      next unless line.start_with? 'data'
-      data = line[6..-1]
+    chunk.each_line do |raw_line|
+      next unless raw_line.start_with? 'data'
+
+      # Remove whitespace; it can cause problems.
+      stripped_line = raw_line.strip
+
+      # Skip objects that are split across multiple chunks.
+      next unless stripped_line.end_with?('}')
+
+      # Remove the prefix 'data: '
+      data = stripped_line[6..-1]
+
+      # Callback time!
       yield data
     end
   end
