@@ -9,8 +9,15 @@ TOPIC = 'recent-change-events'
 CLIENT_ID = 'recent-change-events-source'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 
-def retrieve_events
-  req = Typhoeus::Request.new URL
+def config_from_env
+  { url: URL,
+    topic: TOPIC,
+    client_id: CLIENT_ID,
+    brokers: KAFKA_BROKERS }
+end
+
+def retrieve_events(url)
+  req = Typhoeus::Request.new url
 
   req.on_headers { |response| raise 'Request failed' if response.code != 200 }
 
@@ -25,14 +32,14 @@ def retrieve_events
   req.run
 end
 
-def produce_event(event)
-  DeliveryBoy.deliver event, topic: TOPIC
+def produce_event(event, topic)
+  DeliveryBoy.deliver event, topic: topic
 end
 
-def config
-  DeliveryBoy.configure do |config|
-    config.client_id = CLIENT_ID
-    config.brokers = KAFKA_BROKERS
+def init_producer(config)
+  DeliveryBoy.configure do |db_config|
+    db_config.client_id = config.fetch :client_id
+    db_config.brokers = config.fetch :brokers
   end
 
   logger = Logger.new $stdout
@@ -40,9 +47,11 @@ def config
   DeliveryBoy.logger = logger
 end
 
-def start
-  retrieve_events { |event| produce_event event }
+def start(config)
+  url, topic = config.fetch_values :url, :topic
+  retrieve_events(url) { |event| produce_event event, topic }
 end
 
-config
-start
+config = config_from_env
+init_producer config
+start config
