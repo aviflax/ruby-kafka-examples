@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+
+# Found via http://katafrakt.me//2017/03/10/rocksdb-in-ruby/
+gem 'rocksdb-ruby', github: 'Boostcom/rocksdb-ruby', branch: 'next'
+
+gem 'ruby-kafka'

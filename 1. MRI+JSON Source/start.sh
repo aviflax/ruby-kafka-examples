@@ -1,4 +1,6 @@
 #!/bin/bash
 
-docker build -t app .
-docker run -it --rm app
+TAG="mri-json-source"
+
+docker build -t $TAG . && docker run -it --rm $TAG
+
