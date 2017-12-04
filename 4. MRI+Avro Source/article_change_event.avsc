@@ -1,0 +1,10 @@
+{
+  "name": "article_change_event",
+  "type": "record",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long"
+    }
+  ]
+}
