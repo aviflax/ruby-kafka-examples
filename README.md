@@ -2,6 +2,8 @@
 
 Examples of working with Ruby+Kafka, initially by [Avi Flax](http://aviflax.com/).
 
+Please note: these examples were originally developed in order to be presented live as part of a tech talk. As such there’s little to no written background information or explanation of jargon. If you think those should be added, please open an issue to suggest that.
+
 Please post any and all questions, comments, concerns, suggestions, or any feedback at all as an issue. Thanks!
 
 ## License
