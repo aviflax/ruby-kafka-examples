@@ -62,8 +62,8 @@ def eligible?(event)
   event[:id].is_a? Integer
 end
 
-def produce_event(event, topic, registry_url)
-  event_avro = to_avro event, registry_url
+def produce_event(event, topic)
+  event_avro = to_avro event
   DeliveryBoy.deliver event_avro, topic: topic
 end
 
