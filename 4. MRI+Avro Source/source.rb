@@ -82,7 +82,7 @@ def start(config)
   source_url, topic = config.fetch_values :source_url, :topic
   retrieve_events(source_url) do |raw_event|
     event = JSON.parse raw_event, symbolize_names: true
-    # return unless eligible? event
+    return unless eligible? event
     produce_event event, topic
   end
 end
