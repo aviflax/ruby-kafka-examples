@@ -31,25 +31,28 @@ def create_subscribed_consumer(config, kafka)
   consumer
 end
 
-def increment_article_change_count(article_id)
-  key = article_id.to_s
+def increment_article_change_count(article_title)
+  key = article_title.to_s
   old_value = ROCKSDB.get(key) || '0'
   new_value = old_value.to_i + 1
   ROCKSDB.put key, new_value.to_s
   new_value
 end
 
+def article_title(change_event)
+  change_event.fetch :title
+end
+
 def eligible?(change_event)
-  # For some reason some of the events don't contain the :id key?
-  change_event[:id].is_a? Integer
+  article_title(change_event).is_a?(String) && !article_title(change_event).empty?
 end
 
 # Accepts a hash representing an article change event and returns the a new hash
 # recording the total edit count for that article.
 def transform(change_event)
-  article_id = change_event.fetch :id
-  new_count = increment_article_change_count article_id
-  { article_id: article_id,
+  title = article_title change_event
+  new_count = increment_article_change_count title
+  { article_title: title,
     edit_count: new_count }
 end
 
@@ -58,7 +61,7 @@ def process(event_record, config, kafka)
 
   return unless eligible? change_event
 
-  key = change_event.fetch(:id).to_s
+  key = article_title change_event
   value = transform change_event
   value_json = JSON.dump value
 
