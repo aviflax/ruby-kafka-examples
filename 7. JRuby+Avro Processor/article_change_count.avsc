@@ -1,0 +1,14 @@
+{
+  "name": "article_change_count",
+  "type": "record",
+  "fields": [
+    {
+      "name": "article_id",
+      "type": "long"
+    },
+    {
+      "name": "change_count",
+      "type": "long"
+    }
+  ]
+}
