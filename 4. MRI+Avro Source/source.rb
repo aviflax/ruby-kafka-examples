@@ -53,8 +53,17 @@ def retrieve_events(source_url)
   req.run
 end
 
+def article_title(event)
+  event.fetch(:title)
+       .force_encoding('utf-8')
+end
+
 def to_avro(event)
-  smaller_event = { 'id' => event.fetch(:id) }
+  smaller_event = {
+    'article_title' => article_title(event),
+    'timestamp' => event.fetch(:timestamp)
+  }
+
   AVRO.encode smaller_event, schema_name: 'article_change_event'
 end
 
@@ -62,9 +71,10 @@ def eligible?(event)
   event[:id].is_a? Integer
 end
 
-def produce_event(event, topic)
-  event_avro = to_avro event
-  DeliveryBoy.deliver event_avro, topic: topic
+def produce(event, topic)
+  DeliveryBoy.deliver to_avro(event),
+                      key: article_title(event),
+                      topic: topic
 end
 
 def init_producer(config)
@@ -83,7 +93,7 @@ def start(config)
   retrieve_events(source_url) do |raw_event|
     event = JSON.parse raw_event, symbolize_names: true
     return unless eligible? event
-    produce_event event, topic
+    produce event, topic
   end
 end
 

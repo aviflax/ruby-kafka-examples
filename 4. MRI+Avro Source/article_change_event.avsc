@@ -3,8 +3,13 @@
   "type": "record",
   "fields": [
     {
-      "name": "id",
-      "type": "long"
+      "name": "article_title",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestampMillis"
     }
   ]
 }

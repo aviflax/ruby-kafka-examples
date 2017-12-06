@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'avro_turf/messaging'
+require 'json'
 require 'kafka' # TODO: maybe use Racecar
 
 REGISTRY_URL = 'http://docker.for.mac.localhost:8081/'
@@ -34,8 +35,13 @@ def start(config)
   consumer = create_subscribed_consumer config
 
   consumer.each_message do |event_record|
-    print "#{event_record.offset}: "
-    puts AVRO.decode event_record.value
+    print "#{event_record.key}: "
+    decoded_value = AVRO.decode event_record.value
+
+    # Print out the decoded value as JSON because for some reason when the
+    # decoded hashes are printed as hashes, "extended" unicode characters
+    # are not printed properly; rather they show up as e.g. /u3412 etc.
+    puts JSON.dump decoded_value
   end
 
   nil
