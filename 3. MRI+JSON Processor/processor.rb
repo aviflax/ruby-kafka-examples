@@ -4,13 +4,13 @@ require 'json'
 require 'kafka'
 require 'rocksdb'
 
-TOPIC_IN = 'recent-change-events'
+TOPIC_IN = 'article-change-events'
 TOPIC_OUT = 'article-change-counts'
-GROUP_ID = 'recent-change-events-processor'
+GROUP_ID = 'article-change-events-processor'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 CONSUME_FROM_BEGINNING = true
 
-# Shouldn't really be a constant but this is just a demo...
+# Shouldn't really be a constant but this _is_ just a demo...
 ROCKSDB = RocksDB::DB.new '/tmp/article-change-counts.rocksdb'
 
 def config

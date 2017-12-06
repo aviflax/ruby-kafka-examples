@@ -5,8 +5,8 @@ require 'logger'
 require 'typhoeus'
 
 SOURCE_URL = 'https://stream.wikimedia.org/v2/stream/recentchange'
-TOPIC = 'recent-change-events'
-CLIENT_ID = 'recent-change-events-source'
+TOPIC = 'article-change-events'
+CLIENT_ID = 'article-change-events-source'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 
 def config_from_env

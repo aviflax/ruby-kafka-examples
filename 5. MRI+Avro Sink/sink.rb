@@ -4,8 +4,8 @@ require 'avro_turf/messaging'
 require 'kafka' # TODO: maybe use Racecar
 
 REGISTRY_URL = 'http://docker.for.mac.localhost:8081/'
-TOPIC = 'recent-change-events'
-GROUP_ID = 'recent-change-events-sink'
+TOPIC = 'article-change-events'
+GROUP_ID = 'article-change-events-sink'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 CONSUME_FROM_BEGINNING = false
 

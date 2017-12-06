@@ -2,8 +2,8 @@
 
 require 'kafka' # TODO: maybe use Racecar
 
-TOPIC = 'recent-change-events'
-GROUP_ID = 'recent-change-events-sink'
+TOPIC = 'article-change-events'
+GROUP_ID = 'article-change-events-sink'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 CONSUME_FROM_BEGINNING = false
 

@@ -9,11 +9,11 @@ require 'typhoeus'
 SOURCE_URL = 'https://stream.wikimedia.org/v2/stream/recentchange'
 REGISTRY_URL = 'http://docker.for.mac.localhost:8081/'
 SCHEMATA_PATH = './'
-TOPIC = 'recent-change-events'
-CLIENT_ID = 'recent-change-events-source'
+TOPIC = 'article-change-events'
+CLIENT_ID = 'article-change-events-source'
 KAFKA_BROKERS = ['docker.for.mac.localhost:9092'].freeze
 
-# Shouldn't really be a constant but this is just a demo...
+# Shouldn't really be a constant but this _is_ just a demo...
 AVRO = AvroTurf::Messaging.new registry_url: REGISTRY_URL,
                                schemas_path: SCHEMATA_PATH
 
