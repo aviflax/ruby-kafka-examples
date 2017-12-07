@@ -3,8 +3,8 @@
   "type": "record",
   "fields": [
     {
-      "name": "article_id",
-      "type": "long"
+      "name": "article_title",
+      "type": "string"
     },
     {
       "name": "change_count",
