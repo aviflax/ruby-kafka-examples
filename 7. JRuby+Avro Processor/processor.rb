@@ -10,6 +10,7 @@ java_import org.apache.kafka.common.serialization.Serdes
 java_import org.apache.kafka.streams.KafkaStreams
 java_import org.apache.kafka.streams.StreamsBuilder
 java_import org.apache.kafka.streams.StreamsConfig
+java_import org.apache.kafka.streams.Consumed
 java_import org.apache.kafka.streams.kstream.Produced
 
 # Fake environment variables!
@@ -19,9 +20,6 @@ REGISTRY_URL = 'http://docker.for.mac.localhost:8081/'
 APPLICATION_ID = 'article-change-events-count-processor'
 KAFKA_BROKERS = 'docker.for.mac.localhost:9092'
 CONSUME_FROM_BEGINNING = true
-
-# Shouldn't really be a constant but this _is_ just a demo...
-AVRO = AvroTurf::Messaging.new registry_url: REGISTRY_URL
 
 def config_from_env
   { topic_in: TOPIC_IN,
@@ -34,7 +32,6 @@ end
 def to_streams_config(config)
   StreamsConfig.new(
     StreamsConfig::APPLICATION_ID_CONFIG => config.fetch(:application_id),
-    StreamsConfig::CLIENT_ID_CONFIG => config.fetch(:application_id),
     StreamsConfig::BOOTSTRAP_SERVERS_CONFIG => config.fetch(:brokers),
 
     StreamsConfig::DEFAULT_KEY_SERDE_CLASS_CONFIG =>
@@ -52,15 +49,35 @@ def to_streams_config(config)
   )
 end
 
+# A legit deserializer!
+class AvroDeserializer
+  def initialize
+    @avro = AvroTurf::Messaging.new registry_url: REGISTRY_URL
+  end
+
+  def deserialize(_topic, data)
+    # Convert the Java bytearray into a Ruby String because that's what
+    # AvroTurf::Messaging#decode expects; it can't/won't do an implicit
+    # conversion.
+    @avro.decode data.to_s
+  end
+end
+
+# A not-so-legit serde -- it doesn't implement #serializer
+class AvroSerde
+  def deserializer
+    AvroDeserializer.new
+  end
+end
+
 def build_topology(config)
   topic_in, topic_out = config.fetch_values :topic_in, :topic_out
 
   builder = StreamsBuilder.new
 
   builder
-    .stream(topic_in)
-    .map_values(->(event) { AVRO.decode(event.to_s) })
-    .group_by_key # TODO: change to group by article and day, I think
+    .stream(topic_in, Consumed.with(Serdes.String, AvroSerde.new))
+    .group_by_key
     .count
     .to_stream
     .to(topic_out, Produced.with(Serdes.String, Serdes.Long))
