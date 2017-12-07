@@ -17,13 +17,13 @@ def config_from_env
 end
 
 def to_data(raw_line)
-  return nil unless raw_line.start_with? 'data'
+  return nil unless raw_line.start_with? 'data:'
 
   # Remove whitespace; it can cause problems.
   stripped_line = raw_line.strip
 
   # Skip objects that are split across multiple chunks.
-  return nil unless stripped_line.end_with?('}')
+  return nil unless stripped_line.end_with? '}'
 
   # Remove the prefix 'data: '
   stripped_line[6..-1]
@@ -44,11 +44,12 @@ def retrieve_events(source_url)
   req.run
 end
 
-def produce_event(event, topic)
+def produce!(event, topic)
   DeliveryBoy.deliver event, topic: topic
+  nil
 end
 
-def init_producer(config)
+def init_producer!(config)
   DeliveryBoy.configure do |db_config|
     db_config.client_id = config.fetch :client_id
     db_config.brokers = config.fetch :brokers
@@ -57,13 +58,14 @@ def init_producer(config)
   logger = Logger.new $stdout
   logger.level = Logger::INFO
   DeliveryBoy.logger = logger
+
+  nil
 end
 
 def start(config)
+  init_producer! config
   source_url, topic = config.fetch_values :source_url, :topic
-  retrieve_events(source_url) { |event| produce_event event, topic }
+  retrieve_events(source_url) { |event| produce! event, topic }
 end
 
-config = config_from_env
-init_producer config
-start config
+start config_from_env
