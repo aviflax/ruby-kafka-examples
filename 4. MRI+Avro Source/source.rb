@@ -26,13 +26,13 @@ def config_from_env
 end
 
 def to_data(raw_line)
-  return nil unless raw_line.start_with? 'data'
+  return nil unless raw_line.start_with? 'data:'
 
   # Remove whitespace; it can cause problems.
   stripped_line = raw_line.strip
 
   # Skip objects that are split across multiple chunks.
-  return nil unless stripped_line.end_with?('}')
+  return nil unless stripped_line.end_with? '}'
 
   # Remove the prefix 'data: '
   stripped_line[6..-1]
@@ -67,17 +67,18 @@ def to_avro(event)
   AVRO.encode smaller_event, schema_name: 'article_change_event'
 end
 
-def eligible?(event)
-  event[:id].is_a? Integer
-end
-
-def produce(event, topic)
+def produce!(event, topic)
   DeliveryBoy.deliver to_avro(event),
                       key: article_title(event),
                       topic: topic
+  nil
+rescue StandardError => err
+  puts "ERROR: #{err}"
+  err.backtrace.each { |line| puts "\t#{line}"}
+  nil
 end
 
-def init_producer(config)
+def init_producer!(config)
   DeliveryBoy.configure do |db_config|
     db_config.client_id = config.fetch :client_id
     db_config.brokers = config.fetch :brokers
@@ -86,17 +87,19 @@ def init_producer(config)
   logger = Logger.new $stdout
   logger.level = Logger::INFO
   DeliveryBoy.logger = logger
+
+  nil
 end
 
 def start(config)
+  init_producer! config
+
   source_url, topic = config.fetch_values :source_url, :topic
+
   retrieve_events(source_url) do |raw_event|
     event = JSON.parse raw_event, symbolize_names: true
-    return unless eligible? event
-    produce event, topic
+    produce! event, topic
   end
 end
 
-config = config_from_env
-init_producer config
-start config
+start config_from_env
