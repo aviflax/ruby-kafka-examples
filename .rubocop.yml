@@ -1,0 +1,14 @@
+AllCops:
+  TargetRubyVersion: 2.4
+
+Metrics/AbcSize:
+  Max: 16
+
+Metrics/LineLength:
+  Max: 99
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
