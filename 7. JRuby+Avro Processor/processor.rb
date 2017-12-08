@@ -33,12 +33,8 @@ def to_streams_config(config)
   StreamsConfig.new(
     StreamsConfig::APPLICATION_ID_CONFIG => config.fetch(:application_id),
     StreamsConfig::BOOTSTRAP_SERVERS_CONFIG => config.fetch(:brokers),
-
-    StreamsConfig::DEFAULT_KEY_SERDE_CLASS_CONFIG =>
-      Serdes.String.get_class.get_name,
-
-    StreamsConfig::DEFAULT_VALUE_SERDE_CLASS_CONFIG =>
-      Serdes.ByteArray.get_class.get_name,
+    StreamsConfig::DEFAULT_KEY_SERDE_CLASS_CONFIG => Serdes.String.get_class.get_name,
+    StreamsConfig::DEFAULT_VALUE_SERDE_CLASS_CONFIG => Serdes.ByteArray.get_class.get_name,
 
     # Flush records every 5 seconds. This is less than the default
     # in order to keep this example interactive.
@@ -49,40 +45,51 @@ def to_streams_config(config)
   )
 end
 
-# A legit deserializer!
 class AvroDeserializer
   def initialize
     @avro = AvroTurf::Messaging.new registry_url: REGISTRY_URL
   end
 
   def deserialize(_topic, data)
-    # Convert the Java bytearray into a Ruby String because that's what
-    # AvroTurf::Messaging#decode expects; it can't/won't do an implicit
-    # conversion.
-    @avro.decode data.to_s
+    # Convert the Java bytearray into a Ruby String because that’s what AvroTurf::Messaging#decode
+    # expects; it can't/won't do an implicit conversion.
+    data_string = data.to_s
+
+    # Decode the Avro and then — since we know it’s a hash with string keys — symbolize the keys.
+    @avro.decode(data_string)
+         .map { |k, v| [k.to_sym, v] }
+         .to_h
   end
 end
 
-# A not-so-legit serde -- it doesn't implement #serializer
 class AvroSerde
   def deserializer
     AvroDeserializer.new
   end
 end
 
+def eligible?(event)
+  event[:article_title].is_a?(String) && !event[:article_title].empty?
+end
+
+def build
+  builder = StreamsBuilder.new
+  yield builder
+  builder.build
+end
+
 def build_topology(config)
   topic_in, topic_out = config.fetch_values :topic_in, :topic_out
+  string_serdes = Serdes.String
 
-  builder = StreamsBuilder.new
-
-  builder
-    .stream(topic_in, Consumed.with(Serdes.String, AvroSerde.new))
-    .group_by_key
-    .count
-    .to_stream
-    .to(topic_out, Produced.with(Serdes.String, Serdes.Long))
-
-  builder.build
+  build do |builder|
+    builder.stream(topic_in, Consumed.with(string_serdes, AvroSerde.new))
+           .filter(->(_key, event) { eligible? event })
+           .group_by_key
+           .count
+           .to_stream
+           .to(topic_out, Produced.with(string_serdes, Serdes.Long))
+  end
 end
 
 def start(config)
